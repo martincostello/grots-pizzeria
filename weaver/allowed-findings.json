@@ -92,7 +92,7 @@
     },
     {
       "signal": "span",
-      "name": "request handler - *",
+      "name": "request handler",
       "finding": "missing_attribute",
       "messageMatches": "express\\.(name|type)",
       "reason": "Express's instrumentation makes internal spans for its handlers, with attributes (express.name and express.type) that are not in the registry.",
