@@ -453,7 +453,7 @@ jobs:
 
       - name: Install Chromium
         shell: pwsh
-        run: tests/GrotsPizzeria.EndToEndTests/bin/Release/net11.0/playwright.ps1 install --with-deps chromium
+        run: artifacts/bin/GrotsPizzeria.EndToEndTests/release/playwright.ps1 install --with-deps chromium
 
       - name: Test
         run: dotnet test --project tests/GrotsPizzeria.EndToEndTests --configuration Release --no-build

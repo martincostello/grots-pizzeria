@@ -317,7 +317,7 @@ They also run [axe-core](https://github.com/dequelabs/axe-core)
 ```sh
 # one-off: build, then download Chromium
 dotnet build tests/GrotsPizzeria.EndToEndTests
-pwsh tests/GrotsPizzeria.EndToEndTests/bin/Debug/net11.0/playwright.ps1 install chromium
+pwsh artifacts/bin/GrotsPizzeria.EndToEndTests/debug/playwright.ps1 install chromium
 
 # run them
 dotnet test tests/GrotsPizzeria.EndToEndTests

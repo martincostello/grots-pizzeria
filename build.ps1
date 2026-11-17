@@ -134,7 +134,7 @@ function Install-Tooling {
 function Install-Chromium {
     param([string] $Project)
 
-    $playwright = Get-ChildItem -Path (Join-Path $root "$Project/bin/$Configuration") -Recurse -Filter 'playwright.ps1' | Select-Object -First 1
+    $playwright = Get-ChildItem -Path (Join-Path $root "artifacts/bin/$(Split-Path $Project -Leaf)/$($Configuration.ToLowerInvariant())") -Recurse -Filter 'playwright.ps1' | Select-Object -First 1
     Invoke-Native (Get-Process -Id $PID).Path @('-NoProfile', '-File', $playwright.FullName, 'install', 'chromium')
 }
 
