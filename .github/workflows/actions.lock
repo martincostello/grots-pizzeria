@@ -17,6 +17,7 @@ workflows:
         - 'zizmorcore/zizmor-action@v0.8.1'
     '.github/workflows/codeql.yml':
         - 'actions/checkout@v7.0.1'
+        - 'actions/setup-dotnet@v6.1.0'
         - 'github/codeql-action@v4.39.1'
 dependencies:
     'actions/checkout@v7.0.1':

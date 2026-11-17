@@ -28,7 +28,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'actions', 'csharp', 'go', 'java', 'javascript', 'python' ]
+        include:
+          - language: actions
+            build-mode: none
+          - language: csharp
+            build-mode: manual
+          - language: go
+            build-mode: autobuild
+          - language: java
+            build-mode: none
+          - language: javascript
+            build-mode: none
+          - language: python
+            build-mode: none
 
     steps:
 
@@ -37,10 +49,20 @@ jobs:
       with:
         persist-credentials: false
 
+    # Set up before CodeQL so that its tracer sees the SDK pinned by global.json
+    - name: Setup .NET
+      if: matrix.language == 'csharp'
+      uses: actions/setup-dotnet@v6.1.0
+
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4.39.1
       with:
+        build-mode: ${{ matrix.build-mode }}
         languages: ${{ matrix.language }}
+
+    - name: Build
+      if: matrix.language == 'csharp'
+      run: dotnet build GrotsPizzeria.slnx --configuration Release
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4.39.1
