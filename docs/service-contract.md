@@ -36,6 +36,7 @@ flowchart TD
 | OTLP | Only standard `OTEL_*` environment variables are used for configuration. The compose file sets `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf`. |
 | Semconv | `OTEL_SEMCONV_STABILITY_OPT_IN=http` is set for runtimes that need it to emit the stable HTTP semantic conventions. |
 | Money | JSON numbers rounded to 2 decimal places, in the currency that is given with them (`currency`, an ISO 4217 code such as `GBP`). The menu service decides it (`CURRENCY`, `GBP` by default) and nothing else assumes one. |
+| Rate limiting | The menu service answers `429` (problem body, `title: "Too Many Requests"`, with `Retry-After`) to a client that makes more than `RATE_LIMIT` (600 by default) requests to its menu endpoints in a minute. The health check and the API documentation are not limited. |
 | Timestamps | ISO-8601 UTC (`2026-11-01T10:00:00Z`). |
 
 ## Service-to-service security (JWT)

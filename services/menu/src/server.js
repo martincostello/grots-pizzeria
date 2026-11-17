@@ -7,6 +7,7 @@ import { log } from './logger.js';
 import { requireAuth } from './auth.js';
 import { openApiDocument } from './openapi.js';
 import { CURRENCY } from './currency.js';
+import { createRateLimiter } from './rateLimit.js';
 
 const port = Number.parseInt(process.env.PORT ?? '8081', 10);
 
@@ -25,6 +26,10 @@ class HttpError extends Error {
 const app = express();
 app.disable('x-powered-by');
 const json = express.json();
+
+// Like requireAuth, registered on each route (and ahead of it), so that the health check and the documentation are not limited
+const rateLimiter = createRateLimiter(
+  () => new HttpError(429, 'Too Many Requests', 'Too many requests have been made. Try again later.'));
 
 /**
  * @openapi
@@ -65,8 +70,10 @@ app.get('/healthz', (_req, res) => {
  *                 $ref: '#/components/schemas/MenuItem'
  *       '401':
  *         $ref: '#/components/responses/Unauthorized'
+ *       '429':
+ *         $ref: '#/components/responses/TooManyRequests'
  */
-app.get('/menu', requireAuth, (_req, res) => {
+app.get('/menu', rateLimiter, requireAuth, (_req, res) => {
   const offers = activeOffers();
   res.json(pizzas.map((pizza) => withOffer(pizza, offers)));
 });
@@ -94,6 +101,8 @@ app.get('/menu', requireAuth, (_req, res) => {
  *               $ref: '#/components/schemas/MenuItem'
  *       '401':
  *         $ref: '#/components/responses/Unauthorized'
+ *       '429':
+ *         $ref: '#/components/responses/TooManyRequests'
  *       '404':
  *         description: There is no item with that id.
  *         content:
@@ -101,7 +110,7 @@ app.get('/menu', requireAuth, (_req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Problem'
  */
-app.get('/menu/:id', requireAuth, (req, res) => {
+app.get('/menu/:id', rateLimiter, requireAuth, (req, res) => {
   const pizza = findPizza(req.params.id);
   if (!pizza) {
     log.warn('Unknown pizza requested', { 'grot.pizza.id': req.params.id });
@@ -140,8 +149,10 @@ app.get('/menu/:id', requireAuth, (req, res) => {
  *               $ref: '#/components/schemas/Problem'
  *       '401':
  *         $ref: '#/components/responses/Unauthorized'
+ *       '429':
+ *         $ref: '#/components/responses/TooManyRequests'
  */
-app.post('/menu/price', requireAuth, json, (req, res) => {
+app.post('/menu/price', rateLimiter, requireAuth, json, (req, res) => {
   const items = req.body?.items;
   if (!Array.isArray(items) || items.length === 0) {
     throw new HttpError(400, 'Bad Request', "'items' must be a non-empty array.");

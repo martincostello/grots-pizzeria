@@ -37,6 +37,7 @@ PowerShell: `$env:JWT_SIGNING_KEY = "a-development-key-of-at-least-32-bytes"; np
 | `OTEL_SERVICE_NAME` | `grots-menu` | |
 | `SPECIAL_OFFERS` | `on` | `off` switches the special offers off, so prices never change (used by the end-to-end tests). |
 | `CURRENCY` | `GBP` | The currency the prices are in, as a 3 letter ISO 4217 code in capitals (prices have 2 decimal places). It is sent with every item and every quote (`currency`), so clients show whatever it is. |
+| `RATE_LIMIT` | `600` | The most requests to `/menu`, `/menu/{id}` and `/menu/price` that a client may make in a minute, before it is answered with `429`. A whole number above 0 (the service refuses to start otherwise). The health check and the API documentation are not limited. |
 | `OFFER_DISCOUNT` | `0.15` | The fraction taken off an item on special offer: `0.15` is 15% off. Above 0 and below 1, with at most 4 decimal places, and not so large that an item on offer would cost nothing (the service refuses to start). It is sent with each offer (`discount`), so clients show whatever it is. |
 
 ## API documentation

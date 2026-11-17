@@ -122,6 +122,11 @@ export const openApiDocument = swaggerJsdoc({
           headers: { 'WWW-Authenticate': { schema: { type: 'string', example: 'Bearer' } } },
           content: { 'application/json': { schema: { $ref: '#/components/schemas/Problem' } } },
         },
+        TooManyRequests: {
+          description: 'The client has made more requests in the last minute than the service allows (`RATE_LIMIT`).',
+          headers: { 'Retry-After': { description: 'The seconds until the client may try again.', schema: { type: 'integer', example: 30 } } },
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Problem' } } },
+        },
       },
     },
   },
