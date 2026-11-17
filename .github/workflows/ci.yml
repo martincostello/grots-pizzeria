@@ -393,6 +393,8 @@ jobs:
 
       - name: Run zizmor
         uses: zizmorcore/zizmor-action@v0.8.1
+        with:
+          persona: pedantic
 
   validate:
     name: Validate configuration
