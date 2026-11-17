@@ -1,0 +1,108 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
+using GrotsPizzeria.EndToEndTests.Backend;
+
+namespace GrotsPizzeria.EndToEndTests;
+
+[Collection(PizzeriaCollection.Name)]
+public abstract class PizzeriaTest(PizzeriaFixture fixture) : IAsyncLifetime
+{
+    public const string DemoUsername = "grot";
+    public const string DemoPassword = "Grot!Pizza1";
+
+    private IBrowserContext _context = default!;
+
+    protected IPage Page { get; private set; } = default!;
+
+    protected virtual ColorScheme ColorScheme => ColorScheme.Light;
+
+    protected OtlpSink? Sink => fixture.OtlpSink;
+
+    protected Uri BaseAddress => fixture.BaseAddress;
+
+    /// <summary>Gets the telemetry backend, if there is one to look at (see <see cref="PizzeriaFixture.Grafana"/>).</summary>
+    protected GrafanaClient? Grafana => fixture.Grafana;
+
+    /// <summary>Gets the symbol of the currency of the menu's prices (see <see cref="PizzeriaFixture.Currency"/>).</summary>
+    protected string CurrencySymbol => fixture.Currency switch
+    {
+        "GBP" => "£",
+        "USD" => "$",
+        "EUR" => "€",
+        "JPY" => "¥",
+        var other => throw new NotSupportedException($"The tests do not know how en-US writes amounts in {other}: add its symbol to PizzeriaTest."),
+    };
+
+    /// <summary>Gets the currency of the menu's prices, as an ISO 4217 code.</summary>
+    protected string Currency => fixture.Currency;
+
+    public async ValueTask InitializeAsync()
+    {
+        _context = await fixture.Browser.NewContextAsync(new()
+        {
+            BaseURL = fixture.BaseAddress.ToString(),
+            ColorScheme = ColorScheme,
+            Locale = "en-US",
+            Permissions = ["clipboard-read", "clipboard-write"],
+            ViewportSize = new() { Width = 1280, Height = 900 },
+        });
+
+        Page = await _context.NewPageAsync();
+        Page.Console += (_, m) =>
+        {
+            if (m.Type is "error" or "warning")
+            {
+                Console.WriteLine($"[browser {m.Type}] {m.Text}");
+            }
+        };
+        Page.PageError += (_, e) => Console.WriteLine($"[browser pageerror] {e}");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // Destroying a page outright gives it no chance to send the telemetry it has queued (the browser only does that
+        // as the page is left), which leaves traces without their root spans in the backend. Leave it the way a user would.
+        try
+        {
+            await Page.GotoAsync("about:blank");
+        }
+        catch (PlaywrightException)
+        {
+            // Already gone
+        }
+
+        await _context.DisposeAsync();
+    }
+
+    /// <summary>An amount of money as the UI writes it, in the currency of the menu's prices: <c>£9.50</c> for 9.5 in pounds.</summary>
+    /// <param name="amount">The amount of money.</param>
+    /// <returns>The formatted amount of money.</returns>
+    protected string Money(decimal amount) => CurrencySymbol + amount.ToString("N2", CultureInfo.InvariantCulture);
+
+    protected async Task SignInAsync(string username = DemoUsername, string password = DemoPassword, string? returnTo = null)
+    {
+        await Page.GotoAsync(returnTo is null ? "/login" : $"/login?returnUrl={Uri.EscapeDataString(returnTo)}");
+        await Page.GetByLabel("Username").FillAsync(username);
+        await Page.GetByLabel("Password").FillAsync(password);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Sign in" }).ClickAsync();
+    }
+
+    protected async Task AddToCartAsync(string pizza, int times = 1)
+    {
+        var card = Page.GetByTestId("menu-item").Filter(new() { HasText = pizza });
+
+        for (var i = 0; i < times; i++)
+        {
+            await card.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("Add to cart") }).ClickAsync();
+        }
+    }
+
+    protected async Task PlaceOrderAsync(string cardLast4 = "4242")
+    {
+        // Navigate within the app: a full page load would empty the (in-memory) cart.
+        await Page.GetByTestId("sidebar").GetByRole(AriaRole.Link, new() { Name = "Cart" }).ClickAsync();
+        await Page.GetByLabel("Delivery address").FillAsync("1 Loki Lane, Tempo Town");
+        await Page.GetByLabel("Last 4 digits of your card").FillAsync(cardLast4);
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("Place order") }).ClickAsync();
+    }
+}

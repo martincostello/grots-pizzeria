@@ -1,0 +1,527 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  JWT_SIGNING_KEY: ci-only-signing-key-0123456789-0123456789
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+
+    permissions:
+      pull-requests: read
+
+    outputs:
+      config: ${{ github.event_name != 'pull_request' || steps.filter.outputs.config == 'true' }}
+      dotnet: ${{ github.event_name != 'pull_request' || steps.filter.outputs.dotnet == 'true' }}
+      e2e: ${{ github.event_name != 'pull_request' || steps.filter.outputs.e2e == 'true' }}
+      go: ${{ github.event_name != 'pull_request' || steps.filter.outputs.go == 'true' }}
+      java: ${{ github.event_name != 'pull_request' || steps.filter.outputs.java == 'true' }}
+      javascript: ${{ github.event_name != 'pull_request' || steps.filter.outputs.javascript == 'true' }}
+      markdown: ${{ github.event_name != 'pull_request' || steps.filter.outputs.markdown == 'true' }}
+      node: ${{ github.event_name != 'pull_request' || steps.filter.outputs.node == 'true' }}
+      python: ${{ github.event_name != 'pull_request' || steps.filter.outputs.python == 'true' }}
+      telemetry: ${{ github.event_name != 'pull_request' || steps.filter.outputs.telemetry == 'true' }}
+      workflows: ${{ github.event_name != 'pull_request' || steps.filter.outputs.workflows == 'true' }}
+
+    steps:
+      - name: Detect changed files
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v4.0.3
+        with:
+          filters: |
+            workflow: &workflow
+              - .github/workflows/actions.lock
+              - .github/workflows/ci.yml
+              - .gitattributes
+            dotnet: &dotnet
+              - *workflow
+              - .editorconfig
+              - Directory.Build.props
+              - Directory.Packages.props
+              - global.json
+              - GrotsPizzeria.slnx
+              - src/**
+              - tests/**
+            go: &go
+              - *workflow
+              - services/delivery/**
+            java: &java
+              - *workflow
+              - services/orders/**
+            node: &node
+              - *workflow
+              - services/menu/**
+            python: &python
+              - *workflow
+              - services/checkout/**
+            javascript:
+              - *workflow
+              - eslint.config.mjs
+              - package.json
+              - package-lock.json
+              - stylelint.config.mjs
+              - '**/*.cjs'
+              - '**/*.css'
+              - '**/*.js'
+              - '**/*.mjs'
+            markdown:
+              - *workflow
+              - .markdownlint.json
+              - '**/*.md'
+            workflows:
+              - .github/actionlint-matcher.json
+              - .github/workflows/**
+            config:
+              - *workflow
+              - build.ps1
+              - deploy/**
+              - docker-compose.yml
+              - docker-compose.weaver.yml
+              - weaver/registry/**
+              - services/checkout/app/static/**
+              - services/delivery/static/**
+              - services/menu/public/**
+              - services/orders/src/main/resources/static/**
+              - src/GrotsPizzeria.Client/wwwroot/**
+              - src/GrotsPizzeria.Server/wwwroot/swagger-ui/**
+            e2e: &e2e
+              - *dotnet
+              - *go
+              - *java
+              - *node
+              - *python
+              - .dockerignore
+              - docker-compose.yml
+            telemetry:
+              - *e2e
+              - build.ps1
+              - deploy/**
+              - docker-compose.weaver.report.yml
+              - docker-compose.weaver.yml
+              - scripts/**
+              - weaver/**
+
+  dotnet:
+    name: .NET (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.dotnet == 'true'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6.1.0
+
+      - name: Build
+        run: dotnet build GrotsPizzeria.slnx --configuration Release
+
+  go:
+    name: Go
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        working-directory: services/delivery
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: services/delivery/go.mod
+          cache-dependency-path: services/delivery/go.sum
+
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)"
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v9.3.0
+        with:
+          version: v2.15.0
+          working-directory: services/delivery
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test
+        run: go test ./...
+
+  java:
+    name: Java
+    needs: changes
+    if: needs.changes.outputs.java == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        working-directory: services/orders
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Java
+        uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Lint
+        run: sh ./mvnw --batch-mode --no-transfer-progress compile pmd:check
+
+      - name: Build and test
+        run: sh ./mvnw --batch-mode --no-transfer-progress verify
+
+  javascript:
+    name: JavaScript
+    needs: changes
+    if: needs.changes.outputs.javascript == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint JavaScript
+        run: npm run lint -- --max-warnings 0
+
+      - name: Lint CSS
+        run: npm run lint:css -- --max-warnings 0
+
+  markdown:
+    name: Markdown
+    needs: changes
+    if: needs.changes.outputs.markdown == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v25.0.0
+        with:
+          globs: '**/*.md'
+
+  node:
+    name: Node.js
+    needs: changes
+    if: needs.changes.outputs.node == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        working-directory: services/menu
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: services/menu/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+  python:
+    name: Python
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        working-directory: services/checkout
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v7.1.0
+        with:
+          python-version: '3.15'
+          cache: pip
+          cache-dependency-path: services/checkout/requirements*.txt
+
+      - name: Install
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Test
+        run: pytest
+
+  actionlint:
+    name: Lint workflows
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Add actionlint problem matcher
+        run: echo "::add-matcher::.github/actionlint-matcher.json"
+
+      - name: Run actionlint
+        uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+        with:
+          args: -color
+
+  zizmor:
+    name: Audit workflows
+    needs: changes
+    if: vars.ZIZMOR_ENABLED == 'true' && needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      actions: read # only needed for private or internal repositories
+      contents: read # only needed for private or internal repositories
+      security-events: write # to upload the SARIF results to code scanning
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@v0.8.1
+
+  validate:
+    name: Validate configuration
+    needs: changes
+    if: needs.changes.outputs.config == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate Docker Compose files
+        run: |
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.yml -f docker-compose.weaver.yml config --quiet
+          docker compose -f docker-compose.yml -f docker-compose.weaver.yml -f docker-compose.weaver.report.yml config --quiet
+
+      - name: Validate Grafana dashboard
+        run: |
+          python3 - <<'PY'
+          import glob, json
+          for path in glob.glob("deploy/grafana/dashboards/*.json"):
+              dashboard = json.load(open(path, encoding="utf-8"))
+              assert dashboard["uid"] and dashboard["panels"], path
+              print(f"{path}: {len(dashboard['panels'])} panels")
+          PY
+
+      - name: Validate the API documentation pages are the same
+        shell: pwsh
+        run: ./build.ps1 -Only docs
+
+      - name: Validate Weaver registry
+        run: docker run --rm --volume "$PWD/weaver/registry:/registry:ro" otel/weaver:v0.28.0 registry check --registry /registry
+
+  end-to-end:
+    name: End-to-end tests
+    needs: changes
+    if: needs.changes.outputs.e2e == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6.1.0
+
+      - name: Build
+        run: dotnet build tests/GrotsPizzeria.EndToEndTests --configuration Release
+
+      - name: Install Chromium
+        shell: pwsh
+        run: tests/GrotsPizzeria.EndToEndTests/bin/Release/net11.0/playwright.ps1 install --with-deps chromium
+
+      - name: Test
+        run: dotnet test --project tests/GrotsPizzeria.EndToEndTests --configuration Release --no-build
+
+  telemetry:
+    name: Telemetry
+    needs: changes
+    if: needs.changes.outputs.telemetry == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/swift /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          df -h /
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6.1.0
+
+      - name: Check telemetry
+        shell: pwsh
+        run: ./build.ps1 -Only telemetry
+
+      - name: Upload Weaver report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: weaver-report
+          path: weaver/reports/
+          if-no-files-found: ignore
+
+  ci:
+    name: ci
+    needs: [
+      actionlint,
+      changes,
+      dotnet,
+      end-to-end,
+      go,
+      java,
+      javascript,
+      markdown,
+      node,
+      python,
+      telemetry,
+      validate,
+      zizmor
+      ]
+    if: ${{ !cancelled() }}
+    env:
+      TESTS_SUCCESS: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    runs-on: ubuntu-slim
+    steps:
+    - run: |
+        if [ "$TESTS_SUCCESS" == "true" ]
+        then
+          echo 'Integration tests successful ✅'
+        else
+          echo 'Integration tests failed ❌'
+          exit 1
+        fi
