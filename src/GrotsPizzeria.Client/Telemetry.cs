@@ -1,9 +1,8 @@
 using System.Diagnostics;
 using GrotsPizzeria.Client.Services;
-using Microsoft.JSInterop;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Diagnostics.Tracing;
-using OpenTelemetry;
+using Microsoft.JSInterop;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -26,6 +25,10 @@ public static class Telemetry
 
     /// <summary>The spans for what the user does in the UI, such as placing an order.</summary>
     public static readonly ActivitySource Source = new(Name);
+
+    private static TracerProvider? _tracerProvider;
+    private static MeterProvider? _meterProvider;
+    private static LoggerProvider? _loggerProvider;
 
     public static WebAssemblyHostBuilder AddTelemetry(this WebAssemblyHostBuilder builder, Uri otlpEndpoint)
     {
@@ -90,9 +93,6 @@ public static class Telemetry
         return builder;
     }
 
-    /// <summary>
-    /// Keeps hold of the providers, so that the page can flush them as it goes away, and sets up that flush.
-    /// </summary>
     public static WebAssemblyHost StartTelemetry(this WebAssemblyHost host)
     {
         _tracerProvider = host.Services.GetService<TracerProvider>();
@@ -111,10 +111,6 @@ public static class Telemetry
 
         return host;
     }
-
-    private static TracerProvider? _tracerProvider;
-    private static MeterProvider? _meterProvider;
-    private static LoggerProvider? _loggerProvider;
 
     /// <summary>
     /// Sends everything that is queued now. Called by the page just as it is hidden or unloaded. The flushes are asked to return

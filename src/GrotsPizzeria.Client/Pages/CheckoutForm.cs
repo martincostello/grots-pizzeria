@@ -6,7 +6,7 @@ public sealed class CheckoutForm
 {
     [Required(ErrorMessage = "Where should we send it?")]
     [StringLength(200)]
-    public string Address { get; set; } = "";
+    public string Address { get; set; } = string.Empty;
 
     public string Method { get; set; } = "card";
 

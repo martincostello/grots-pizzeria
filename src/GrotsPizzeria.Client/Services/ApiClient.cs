@@ -2,7 +2,6 @@ using GrotsPizzeria.Shared;
 
 namespace GrotsPizzeria.Client.Services;
 
-/// <summary>Typed wrapper over the BFF's <c>/api</c> surface. Failures come back as a <see cref="ProblemResponse"/>.</summary>
 public sealed class ApiClient(HttpClient http)
 {
     public Task<ApiResult<ClientConfig>> GetConfigAsync() => SendAsync<ClientConfig>(HttpMethod.Get, "api/config");
@@ -24,6 +23,18 @@ public sealed class ApiClient(HttpClient http)
     public Task<ApiResult<UserInfo>> RegisterAsync(RegisterRequest request) => SendAsync<UserInfo>(HttpMethod.Post, "api/auth/register", request);
 
     public Task<ApiResult<object>> LogoutAsync() => SendAsync<object>(HttpMethod.Post, "api/auth/logout");
+
+    private static async Task<ProblemResponse?> TryReadProblemAsync(HttpResponseMessage response)
+    {
+        try
+        {
+            return await response.Content.ReadFromJsonAsync<ProblemResponse>();
+        }
+        catch (Exception ex) when (ex is System.Text.Json.JsonException or NotSupportedException)
+        {
+            return null;
+        }
+    }
 
     private async Task<ApiResult<T>> SendAsync<T>(HttpMethod method, string uri, object? body = null)
     {
@@ -52,18 +63,6 @@ public sealed class ApiClient(HttpClient http)
         catch (HttpRequestException ex)
         {
             return new(default, new ProblemResponse("The pizzeria is unreachable", 0, ex.Message));
-        }
-    }
-
-    private static async Task<ProblemResponse?> TryReadProblemAsync(HttpResponseMessage response)
-    {
-        try
-        {
-            return await response.Content.ReadFromJsonAsync<ProblemResponse>();
-        }
-        catch (Exception ex) when (ex is System.Text.Json.JsonException or NotSupportedException)
-        {
-            return null;
         }
     }
 }

@@ -3,7 +3,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <NoWarn>$(NoWarn);SA1600;SYSLIB1045</NoWarn>
+    <NoWarn>$(NoWarn);SYSLIB1045</NoWarn>
     <OutputType>Exe</OutputType>
     <RootNamespace>GrotsPizzeria.EndToEndTests</RootNamespace>
   </PropertyGroup>

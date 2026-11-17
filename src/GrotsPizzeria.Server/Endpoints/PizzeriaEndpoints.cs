@@ -27,7 +27,7 @@ internal static class PizzeriaEndpoints
             .RequireAuthorization()
             .WithTags("Orders");
 
-        orders.MapPost("", async (PlaceOrderRequest request, ClaimsPrincipal user, OrdersClient client, CancellationToken ct) =>
+        orders.MapPost(string.Empty, async (PlaceOrderRequest request, ClaimsPrincipal user, OrdersClient client, CancellationToken ct) =>
         {
             if (Validate(request) is { } problem)
             {
@@ -48,7 +48,7 @@ internal static class PizzeriaEndpoints
         .Produces<ProblemResponse>(StatusCodes.Status502BadGateway)
         .Produces<ProblemResponse>(StatusCodes.Status503ServiceUnavailable);
 
-        orders.MapGet("", async (ClaimsPrincipal user, OrdersClient client, CancellationToken ct) =>
+        orders.MapGet(string.Empty, async (ClaimsPrincipal user, OrdersClient client, CancellationToken ct) =>
             (await client.GetOrdersAsync(UserId(user), ct)).ToHttpResult())
             .WithSummary("List the signed-in user's orders")
             .WithDescription("Newest first. Only the user's own orders are ever returned.")
