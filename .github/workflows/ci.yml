@@ -93,6 +93,7 @@ jobs:
             workflows:
               - .github/actionlint-matcher.json
               - .github/workflows/**
+              - .github/zizmor.yml
             config:
               - *workflow
               - build.ps1
