@@ -376,7 +376,7 @@ jobs:
   zizmor:
     name: Audit workflows
     needs: changes
-    if: vars.ZIZMOR_ENABLED == 'true' && needs.changes.outputs.workflows == 'true'
+    if: needs.changes.outputs.workflows == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
