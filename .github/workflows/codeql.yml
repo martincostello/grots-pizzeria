@@ -49,7 +49,6 @@ jobs:
       with:
         persist-credentials: false
 
-    # Set up before CodeQL so that its tracer sees the SDK pinned by global.json
     - name: Setup .NET
       if: matrix.language == 'csharp'
       uses: actions/setup-dotnet@v6.1.0
