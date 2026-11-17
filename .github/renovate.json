@@ -1,3 +1,11 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json"
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "packageRules": [
+    {
+      "description": "Update stylelint and its standard config together",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["stylelint", "stylelint-config-standard"],
+      "groupName": "stylelint"
+    }
+  ]
 }
