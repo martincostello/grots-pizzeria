@@ -137,7 +137,7 @@ services:
         condition: service_healthy
 
   lgtm:
-    image: grafana/otel-lgtm:latest
+    image: grafana/otel-lgtm:0.41.0@sha256:2e3290657f2f2a256c7a9175f097424a3ac5b54840741ace433e108e109348b6
     ports:
       - "3000:3000" # Grafana
       - "4317:4317" # OTLP/gRPC
