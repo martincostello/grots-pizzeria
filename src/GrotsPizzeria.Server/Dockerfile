@@ -1,5 +1,5 @@
 # Build context: the repository root (see docker-compose.yml).
-FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0@sha256:65f3c7c6a25a239ab3e6719f2896147e7b68242ff2d8818dd70498bde6ef8bea AS build
 WORKDIR /src
 
 COPY Directory.Build.props Directory.Packages.props .editorconfig GrotsPizzeria.ruleset stylecop.json ./
@@ -11,7 +11,7 @@ RUN dotnet restore src/GrotsPizzeria.Server/GrotsPizzeria.Server.csproj
 COPY src/ src/
 RUN dotnet publish src/GrotsPizzeria.Server/GrotsPizzeria.Server.csproj -c Release -o /app --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:11.0
+FROM mcr.microsoft.com/dotnet/aspnet:11.0@sha256:bc0d6653979efba491ab3d6f589d691f96c309c3c3ef81325efa6978e7b7f242
 WORKDIR /app
 
 RUN mkdir /data && chown app:app /data

@@ -1,5 +1,5 @@
 # Build context: services/orders
-FROM eclipse-temurin:25-jdk AS build
+FROM eclipse-temurin:25-jdk@sha256:884a2f8692cc1e2c7e21f95914adf0ae0eafee9a7eb663a12169cc44468256ec AS build
 WORKDIR /src
 
 # Restore dependencies (including the OpenTelemetry Java agent) in their own layer.
@@ -10,7 +10,7 @@ RUN chmod +x mvnw && ./mvnw -B -q dependency:go-offline
 COPY src src
 RUN ./mvnw -B -DskipTests package
 
-FROM eclipse-temurin:25-jre
+FROM eclipse-temurin:25-jre@sha256:945247f9d092703e0c6be92243ef3c51640229e23ab34d353c8dcdc73e6cd4e6
 WORKDIR /app
 
 # curl is used by the container health check
