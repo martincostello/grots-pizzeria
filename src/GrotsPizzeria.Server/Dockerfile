@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 
-COPY Directory.Build.props Directory.Packages.props .editorconfig ./
+COPY Directory.Build.props Directory.Packages.props .editorconfig GrotsPizzeria.ruleset stylecop.json ./
 COPY src/GrotsPizzeria.Shared/GrotsPizzeria.Shared.csproj src/GrotsPizzeria.Shared/
 COPY src/GrotsPizzeria.Client/GrotsPizzeria.Client.csproj src/GrotsPizzeria.Client/
 COPY src/GrotsPizzeria.Server/GrotsPizzeria.Server.csproj src/GrotsPizzeria.Server/
