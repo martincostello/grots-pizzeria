@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <CodeAnalysisRuleSet>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), 'GrotsPizzeria.ruleset'))</CodeAnalysisRuleSet>
+    <ContinuousIntegrationBuild>$([MSBuild]::ValueOrDefault('$(CI)', 'false'))</ContinuousIntegrationBuild>
+    <Deterministic>$([MSBuild]::ValueOrDefault('$(Deterministic)', 'true'))</Deterministic>
+    <DeterministicTimestamp>$([MSBuild]::ValueOrDefault('$(DeterministicTimestamp)', 'true'))</DeterministicTimestamp>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <LangVersion>latest</LangVersion>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <MSBuildTreatWarningsAsErrors Condition=" '$(CI)' == 'true' ">true</MSBuildTreatWarningsAsErrors>
+    <NuGetAudit>true</NuGetAudit>
+    <Nullable>enable</Nullable>
+    <TargetFramework>net11.0</TargetFramework>
+    <TreatWarningsAsErrors Condition=" '$(CI)' == 'true' ">true</TreatWarningsAsErrors>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(GenerateDocumentationFile)' != 'true' ">
+    <NoWarn>$(NoWarn);419;1570;1573;1574;1584;1591;SA0001;SA1602</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), 'stylecop.json'))" Link="stylecop.json" />
+  </ItemGroup>
+</Project>

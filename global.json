@@ -1,0 +1,17 @@
+{
+  "sdk": {
+    "version": "11.0.100",
+    "allowPrerelease": false,
+    "paths": [
+      ".dotnet",
+      "$host$"
+    ],
+    "errorMessage": "A supported version of the .NET SDK could not be found."
+  },
+  "msbuild-sdks": {
+    "Aspire.AppHost.Sdk": "13.6.5"
+  },
+  "test": {
+    "runner": "Microsoft.Testing.Platform"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "src/GrotsPizzeria.AppHost/GrotsPizzeria.AppHost.csproj"
+  }
+}
