@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Aspire.AppHost.Sdk" />
   <PropertyGroup>
     <AspireUseCliBundle>true</AspireUseCliBundle>
     <OutputType>Exe</OutputType>
@@ -7,6 +6,7 @@
     <UserSecretsId>grots-pizzeria-apphost</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GrotsPizzeria.Server\GrotsPizzeria.Server.csproj" />
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.Dotnet" />
   </ItemGroup>
 </Project>

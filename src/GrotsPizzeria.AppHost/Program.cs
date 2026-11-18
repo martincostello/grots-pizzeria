@@ -39,7 +39,7 @@ var browserOtlp = builder.Configuration["BROWSER_OTLP_ENDPOINT"]
     ?? builder.Configuration["ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL"]
     ?? builder.Configuration["DOTNET_DASHBOARD_OTLP_HTTP_ENDPOINT_URL"];
 
-var web = builder.AddProject<Projects.GrotsPizzeria_Server>("grots-web")
+var web = builder.AddDotnetProject("grots-web", "../GrotsPizzeria.Server")
     .WithEndpoint("http", endpoint => endpoint.Port = null)
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/healthz")

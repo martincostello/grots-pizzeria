@@ -8,9 +8,6 @@
     ],
     "errorMessage": "A supported version of the .NET SDK could not be found."
   },
-  "msbuild-sdks": {
-    "Aspire.AppHost.Sdk": "17.0.0"
-  },
   "test": {
     "runner": "Microsoft.Testing.Platform"
   }
