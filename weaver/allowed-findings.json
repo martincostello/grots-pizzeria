@@ -51,6 +51,58 @@
     },
     {
       "signal": "metric",
+      "name": "process.*",
+      "finding": "entity_required_attribute_not_present",
+      "messageMatches": "process\\.creation\\.time",
+      "reason": "The resource detectors of the Go SDK, the Node.js SDK and the Python SDK do not set when the process was created (process.creation.time), which the conventions require of a resource that describes a process.",
+      "emittedBy": "Go, Node.js, Python"
+    },
+    {
+      "signal": "metric",
+      "name": "process.cpu.time",
+      "finding": "missing_attribute",
+      "messageMatches": "Attribute 'type'",
+      "reason": "The Python process metrics call the mode of the CPU time type, where the registry says cpu.mode.",
+      "emittedBy": "Python"
+    },
+    {
+      "signal": "metric",
+      "name": "process.cpu.time",
+      "finding": "required_attribute_not_present",
+      "messageMatches": "cpu\\.mode",
+      "reason": "The Python process metrics call the mode of the CPU time type, where the registry says cpu.mode.",
+      "emittedBy": "Python"
+    },
+    {
+      "signal": "metric",
+      "name": "process.thread.count",
+      "finding": "unit_mismatch",
+      "reason": "The Python process metrics have no unit for the number of threads, where the registry says {thread}.",
+      "emittedBy": "Python"
+    },
+    {
+      "signal": "metric",
+      "name": "process.cpu.utilization",
+      "finding": "unit_mismatch",
+      "reason": "The Node.js process metrics have no unit for the utilization of the CPU, where the registry says 1.",
+      "emittedBy": "Node.js"
+    },
+    {
+      "signal": "metric",
+      "name": "process.memory.usage",
+      "finding": "unit_mismatch",
+      "reason": "The Node.js process metrics have no unit for the memory in use, where the registry says By.",
+      "emittedBy": "Node.js"
+    },
+    {
+      "signal": "metric",
+      "name": "process.memory.usage",
+      "finding": "unexpected_instrument",
+      "reason": "The Node.js process metrics report the memory in use as a gauge, where the registry says that it is an up-down counter.",
+      "emittedBy": "Node.js"
+    },
+    {
+      "signal": "metric",
       "name": "processedLogs",
       "reason": "The OpenTelemetry Java SDK's metrics about its own log processors are named in a way that the conventions do not allow.",
       "emittedBy": "Java"

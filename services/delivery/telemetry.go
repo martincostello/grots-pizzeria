@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"go.opentelemetry.io/contrib/exporters/autoexport"
+	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/contrib/processors/baggagecopy"
 	"go.opentelemetry.io/otel"
@@ -48,9 +49,10 @@ func setupTelemetry(ctx context.Context) (shutdown func(context.Context) error, 
 	}
 	res, err := resource.New(ctx, append(attrs,
 		resource.WithTelemetrySDK(),
-		resource.WithHost(),
-		resource.WithProcess(),
 		resource.WithContainer(),
+		resource.WithHost(),
+		resource.WithOS(),
+		resource.WithProcess(),
 	)...)
 	if err != nil {
 		return fail(err)
@@ -103,6 +105,11 @@ func setupTelemetry(ctx context.Context) (shutdown func(context.Context) error, 
 
 	// Go runtime metrics (go.* semantic conventions).
 	if err := runtime.Start(); err != nil {
+		return fail(err)
+	}
+
+	// Metrics of the process (process.* semantic conventions, such as its CPU time and memory) and of the host it runs on.
+	if err := host.Start(); err != nil {
 		return fail(err)
 	}
 

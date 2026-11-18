@@ -5,12 +5,16 @@
 process.env.OTEL_SERVICE_NAME ??= 'grots-menu';
 process.env.OTEL_SEMCONV_STABILITY_OPT_IN ??= 'http';
 
+// Describe where the service runs: its container, host, operating system and process. The SDK's own default leaves out the container,
+// and "all" would also try the cloud providers' detectors, which query their metadata endpoints.
+process.env.OTEL_NODE_RESOURCE_DETECTORS ??= 'container,env,host,os,process,serviceinstance';
+
 // Express is a CommonJS package that is imported from an ES module, so the ESM loader hook is needed for it to be patched.
 const { register } = await import('node:module');
 register('@opentelemetry/instrumentation/hook.mjs', import.meta.url);
 
 const { NodeSDK } = await import('@opentelemetry/sdk-node');
-const { getNodeAutoInstrumentations } = await import('@opentelemetry/auto-instrumentations-node');
+const { getNodeAutoInstrumentations, getResourceDetectors } = await import('@opentelemetry/auto-instrumentations-node');
 const { BaggageSpanProcessor } = await import('@opentelemetry/baggage-span-processor');
 const { OTLPTraceExporter } = await import('@opentelemetry/exporter-trace-otlp-proto');
 const { BatchSpanProcessor, ConsoleSpanExporter, SimpleSpanProcessor } = await import('@opentelemetry/sdk-trace');
@@ -39,8 +43,13 @@ for (const name of exporters) {
 
 const sdk = new NodeSDK({
   spanProcessors,
+  // The SDK reads OTEL_NODE_RESOURCE_DETECTORS itself, but only knows the detectors in the SDK, not the container one.
+  resourceDetectors: getResourceDetectors(),
   instrumentations: [
     getNodeAutoInstrumentations({
+      // The CPU and memory used by the process (process.*), but not the system-wide metrics that the instrumentation also has.
+      // It is off by default, so it is enabled here.
+      '@opentelemetry/instrumentation-host-metrics': { enabled: true, metricGroups: ['process.cpu', 'process.memory'] },
       // Express is instrumented by instrumentation-express, which also reports http.route on the
       // server span and metrics. The Express 5 router instrumentation would only add duplicate spans.
       '@opentelemetry/instrumentation-router': { enabled: false },

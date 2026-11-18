@@ -54,12 +54,12 @@ flowchart LR
 
 | Service | How it is instrumented |
 | --- | --- |
-| `grots-ui` (the Blazor client, in the browser) | The OpenTelemetry .NET SDK running in WebAssembly, exporting OTLP/HTTP straight to the collector: Blazor's built-in component spans and metrics, plus spans for UI actions and HTTP calls. The browser's trace continues on the server |
-| `grots-web` | The OpenTelemetry .NET SDK + OTLP exporter, listening to the instrumentation **built in to ASP.NET Core and .NET**, plus `OpenTelemetry.Instrumentation.EntityFrameworkCore` for the SQLite database |
-| `grots-menu` | `@opentelemetry/sdk-node` + `@opentelemetry/auto-instrumentations-node` |
-| `grots-orders` | The OpenTelemetry Java agent (zero code) + `opentelemetry-api` for a custom metric |
-| `grots-checkout` | `opentelemetry-distro` zero-code auto-instrumentation (`opentelemetry-instrument`) |
-| `grots-delivery` | The OpenTelemetry Go SDK with `otelhttp`, `runtime` and `otelslog`, exporters chosen by `autoexport` |
+| `grots-ui` (the Blazor client, in the browser) | The OpenTelemetry .NET SDK running in WebAssembly, exporting OTLP/HTTP straight to the collector: Blazor's built-in component spans and metrics, plus spans for UI actions and HTTP calls. The browser's trace continues on the server. Only the process runtime is detected as a resource, as the browser has no host, operating system, process or container to describe |
+| `grots-web` | The OpenTelemetry .NET SDK + OTLP exporter, listening to the instrumentation **built in to ASP.NET Core and .NET**, plus `OpenTelemetry.Instrumentation.EntityFrameworkCore` for the SQLite database, `OpenTelemetry.Instrumentation.Process` for the process's CPU and memory, and the container, host, operating system, process and process runtime resource detectors |
+| `grots-menu` | `@opentelemetry/sdk-node` + `@opentelemetry/auto-instrumentations-node`, with its process metrics (`instrumentation-host-metrics`) and container, host, operating system and process resource detectors |
+| `grots-orders` | The OpenTelemetry Java agent (zero code, which also detects the container, host, operating system, process and process runtime resources) + `opentelemetry-api` for a custom metric |
+| `grots-checkout` | `opentelemetry-distro` zero-code auto-instrumentation (`opentelemetry-instrument`), with `opentelemetry-instrumentation-system-metrics` for process metrics and the container, host, operating system and process resource detectors |
+| `grots-delivery` | The OpenTelemetry Go SDK with `otelhttp`, `runtime`, `host` (process metrics) and `otelslog`, exporters chosen by `autoexport`, and the container, host, operating system and process resource detectors |
 
 The wire contract between the services (endpoints, payloads, environment variables, JWT claims and the custom `grot.*`
 telemetry) is documented in the [service contract](docs/service-contract.md).

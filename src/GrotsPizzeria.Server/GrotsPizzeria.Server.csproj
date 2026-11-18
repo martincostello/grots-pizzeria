@@ -11,6 +11,12 @@
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Process" />
+    <PackageReference Include="OpenTelemetry.Resources.Container" />
+    <PackageReference Include="OpenTelemetry.Resources.Host" />
+    <PackageReference Include="OpenTelemetry.Resources.OperatingSystem" />
+    <PackageReference Include="OpenTelemetry.Resources.Process" />
+    <PackageReference Include="OpenTelemetry.Resources.ProcessRuntime" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GrotsPizzeria.Client\GrotsPizzeria.Client.csproj" />
