@@ -12,6 +12,10 @@ const string Propagators = "tracecontext,baggage";
 // Generated per run; Aspire keeps it out of logs and the dashboard.
 var jwtKey = builder.AddParameter("jwt-signing-key", () => Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), secret: true);
 
+// The Aspire dashboard's OTLP/HTTP endpoint, which the services send their telemetry to.
+var dashboardOtlp = builder.Configuration["ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL"]
+    ?? builder.Configuration["DOTNET_DASHBOARD_OTLP_HTTP_ENDPOINT_URL"];
+
 var menu = AddService("grots-menu", "menu", 8081)
     .WithEnvironment("SPECIAL_OFFERS", builder.Configuration["SPECIAL_OFFERS"] ?? "on")
     .WithEnvironment("OFFER_DISCOUNT", builder.Configuration["OFFER_DISCOUNT"] ?? string.Empty)
@@ -35,11 +39,10 @@ var orders = AddService("grots-orders", "orders", 8082, debugSampler: "grots_alw
 // BROWSER_OTLP_ENDPOINT, or else the Aspire dashboard's OTLP/HTTP endpoint. The dashboard allows the app's origin
 // automatically, and is run without OTLP authentication (see launchSettings.json) because a browser has no secret to
 // authenticate with. Without either, the browser sends no telemetry.
-var browserOtlp = builder.Configuration["BROWSER_OTLP_ENDPOINT"]
-    ?? builder.Configuration["ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL"]
-    ?? builder.Configuration["DOTNET_DASHBOARD_OTLP_HTTP_ENDPOINT_URL"];
+var browserOtlp = builder.Configuration["BROWSER_OTLP_ENDPOINT"] ?? dashboardOtlp;
 
 var web = builder.AddDotnetProject("grots-web", "../GrotsPizzeria.Server")
+    .WithSingleThreadedBuild() // HACK Workaround for https://github.com/microsoft/aspire/issues/20709
     .WithEndpoint("http", endpoint => endpoint.Port = null)
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/healthz")
@@ -86,7 +89,11 @@ IResourceBuilder<ContainerResource> AddService(string name, string directory, in
         .WithCertificateTrustScope(CertificateTrustScope.System)
         .WithCertificateTrustConfiguration(context =>
         {
-            context.EnvironmentVariables["OTEL_EXPORTER_OTLP_CERTIFICATE"] = context.CertificateBundlePath;
+            if (dashboardOtlp?.StartsWith("https://", StringComparison.OrdinalIgnoreCase) is true)
+            {
+                context.EnvironmentVariables["OTEL_EXPORTER_OTLP_CERTIFICATE"] = context.CertificateBundlePath;
+            }
+
             return Task.CompletedTask;
         });
 
