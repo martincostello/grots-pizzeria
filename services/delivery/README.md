@@ -31,6 +31,8 @@ them in step with the routes in `newMux`). The page is in `static`, embedded in 
   `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` (the default protocol is `http/protobuf`).
 * `otelhttp` provides the HTTP server span and `http.server.*` metrics, `runtime` provides the Go runtime metrics
   and `otelslog` bridges `log/slog` to OpenTelemetry logs (they are also written to stdout).
+* `host` provides the metrics of the process (`process.*`, such as its CPU time) and of the host (`system.*`), and the resource says
+  where the service runs (`container.*`, `host.*`, `os.*` and `process.*`, including the Go runtime that built it).
 * `grot.deliveries.active` (observable up/down counter) is the custom metric, and `grot.order.id` is set on server spans.
 * To see telemetry without a backend: `OTEL_TRACES_EXPORTER=console OTEL_METRICS_EXPORTER=console OTEL_LOGS_EXPORTER=console`.
 

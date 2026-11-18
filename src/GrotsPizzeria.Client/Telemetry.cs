@@ -51,6 +51,7 @@ public static class Telemetry
         builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource
                 .AddService("grots-ui", serviceNamespace: "grots-pizzeria")
+                .AddProcessRuntimeDetector()
                 .AddAttributes([new("telemetry.distro.name", "blazor-webassembly")]))
             .WithTracing(tracing =>
             {

@@ -40,18 +40,28 @@ var builder = WebApplication.CreateBuilder(args);
 // OpenTelemetry:
 // ASP.NET Core and .NET emit spans and metrics using the OpenTelemetry semantic conventions natively, so the
 // SDK only needs to be told which sources to listen to, which appsettings.json does ("Metrics:EnabledMetrics" and
-// "Tracing:EnabledTracing"). The one exception is EF Core, which has no built-in tracing, so it is added in code.
+// "Tracing:EnabledTracing"). The exceptions are EF Core, which has no built-in tracing, and the metrics of the process
+// (CPU time, memory and so on), which .NET does not emit itself, so they are added in code. The resource detectors
+// describe where the application runs: the host, the operating system, the process, the runtime and the container.
 // The exporter is configured entirely from the standard OTEL_* environment variables
 // (OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_PROTOCOL, OTEL_SERVICE_NAME, ...).
 builder.Services.AddMetrics();
 builder.Services.AddTracing(tracing => tracing.AddConfiguration(builder.Configuration.GetSection("Tracing")));
 builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService("grots-web"))
+    .ConfigureResource(resource => resource
+        .AddService("grots-web")
+        .AddContainerDetector()
+        .AddHostDetector()
+        .AddOperatingSystemDetector()
+        .AddProcessDetector()
+        .AddProcessRuntimeDetector())
     .WithTracing(tracing => tracing
         .SetSampler(new HealthCheckSampler(ConfiguredSampler.Create(builder.Configuration)))
         .AddProcessor<BaggageActivityProcessor>()
         .AddEntityFrameworkCoreInstrumentation())
-    .WithMetrics(metrics => metrics.SetExemplarFilter(ExemplarFilterType.TraceBased))
+    .WithMetrics(metrics => metrics
+        .SetExemplarFilter(ExemplarFilterType.TraceBased)
+        .AddProcessInstrumentation())
     .WithLogging(logging => logging.AddProcessor(new DropOriginalFormatProcessor()), options =>
     {
         options.IncludeFormattedMessage = true;

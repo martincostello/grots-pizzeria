@@ -55,6 +55,12 @@ Node.js runtime metrics; traces, metrics and logs are exported over OTLP using o
 environment variables. It defaults `OTEL_SERVICE_NAME` to `grots-menu` and `OTEL_SEMCONV_STABILITY_OPT_IN` to `http`
 (stable HTTP semantic conventions).
 
+The CPU time and memory of the process (`process.*`) come from `@opentelemetry/instrumentation-host-metrics`, which the
+auto-instrumentations include but leave off, so `instrumentation.js` turns it on for those metrics only. The resource says where
+the service runs (`container.*`, `host.*`, `os.*` and `process.*`) through the SDK's detectors and the container one, which
+`instrumentation.js` selects with `OTEL_NODE_RESOURCE_DETECTORS` (unless it is set) instead of the SDK's default of every
+detector but the container's.
+
 `OTEL_TRACES_EXPORTER` chooses where traces go: `otlp` (the default, always over `http/protobuf`, the only OTLP protocol this
 service includes an exporter for), `console`, both (`otlp,console`) or `none`. Other values, such as `zipkin`, are ignored.
 

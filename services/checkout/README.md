@@ -25,6 +25,13 @@ Zero-code instrumentation with the OpenTelemetry Python distro, using only packa
 | `opentelemetry-distro` | `opentelemetry-instrument` and SDK defaults |
 | `opentelemetry-exporter-otlp` | OTLP exporters (gRPC and HTTP/protobuf) |
 | `opentelemetry-instrumentation-fastapi` | HTTP server spans and `http.server.*` metrics |
+| `opentelemetry-instrumentation-system-metrics` | The metrics of the process (`process.*`, such as its CPU time and memory) |
+| `opentelemetry-resource-detector-containerid` | The `container.id` resource attribute |
+
+The resource says where the service runs (`container.*`, `host.*`, `os.*` and `process.*`) through the detectors that the
+Dockerfile selects with `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`. The instrumentation has many more metrics than the process's
+CPU time, memory and threads: the system-wide ones (`system.*`), the deprecated `process.runtime.*` ones and others that are not
+needed are left out with `OTEL_PYTHON_SYSTEM_METRICS_EXCLUDED_METRICS`.
 
 Standard logging is exported as OTLP logs (with trace context) by `OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true`.
 The service adds the `grot.checkout.payments` counter and the `grot.order.id` span attribute.

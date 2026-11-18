@@ -86,7 +86,8 @@ docker run --rm -p 8082:8082 -e JWT_SIGNING_KEY="a-development-only-key-of-at-le
 Everything comes from the [OpenTelemetry Java agent](https://github.com/open-telemetry/opentelemetry-java-instrumentation)
 with no instrumentation code: HTTP server spans/metrics (Tomcat), HTTP client spans/metrics (JDK `HttpClient`), JVM runtime
 metrics and Logback log records correlated with the active trace. The agent already emits the stable HTTP semantic
-conventions, so `OTEL_SEMCONV_STABILITY_OPT_IN` is not needed.
+conventions, so `OTEL_SEMCONV_STABILITY_OPT_IN` is not needed. It also describes where the service runs, with the container,
+host, operating system, process and process runtime resource attributes (`container.*`, `host.*`, `os.*` and `process.*`).
 
 The only code that touches OpenTelemetry is `io.opentelemetry:opentelemetry-api`, used for the custom
 `grot.orders.placed` counter (`OrderMetrics`) and the `grot.order.id` attribute on the server span (`OrderService`).

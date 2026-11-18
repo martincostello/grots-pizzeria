@@ -6,7 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     OTEL_SERVICE_NAME=grots-checkout \
     OTEL_SEMCONV_STABILITY_OPT_IN=http \
     OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true \
-    OTEL_PYTHON_FASTAPI_EXCLUDED_URLS=healthz
+    OTEL_PYTHON_FASTAPI_EXCLUDED_URLS=healthz \
+    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS=containerid,host,os,otel,process,service_instance \
+    OTEL_PYTHON_SYSTEM_METRICS_EXCLUDED_METRICS="system.*,process.runtime.*,process.context_switches,process.cpu.utilization,process.disk.io,process.open_file_descriptor.count,cpython.*"
 
 WORKDIR /app
 
