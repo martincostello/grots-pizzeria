@@ -20,7 +20,7 @@
     <opentelemetry-instrumentation.version>2.34.0</opentelemetry-instrumentation.version>
     <otel.agent.dir>${project.build.directory}/otel</otel.agent.dir>
     <pmd.version>7.30.0</pmd.version>
-    <springdoc.version>3.2.0</springdoc.version>
+    <springdoc.version>3.2.1</springdoc.version>
   </properties>
 
   <dependencyManagement>
