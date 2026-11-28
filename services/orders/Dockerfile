@@ -1,5 +1,5 @@
 # Build context: services/orders
-FROM eclipse-temurin:25-jdk@sha256:884a2f8692cc1e2c7e21f95914adf0ae0eafee9a7eb663a12169cc44468256ec AS build
+FROM eclipse-temurin:25-jdk@sha256:ce2ef9d2d67a68de5e196d4de9d743327c44a10b57fe02ec39f572c652cacfd3 AS build
 WORKDIR /src
 
 # Restore dependencies (including the OpenTelemetry Java agent) in their own layer.
